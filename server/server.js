@@ -1,4 +1,5 @@
 
+
 require("dotenv").config();
 
 const express = require("express");
@@ -9,13 +10,28 @@ const contactRoutes = require("./routes/contactRoutes");
 
 const app = express();
 
-// Middleware
+// Allowed frontend origins
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://koshila.vercel.app"
+];
+
+// CORS middleware
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
   })
 );
 
+// Body parsing middleware
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -23,7 +39,7 @@ app.use(express.urlencoded({ extended: true }));
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
-    message: "Koshila Solution API is running!",
+    message: "Koshila Solution API is running!"
   });
 });
 
@@ -37,9 +53,9 @@ const startServer = async () => {
   try {
     await connectDB();
 
-    app.listen(PORT, () => {
+    app.listen(PORT, "0.0.0.0", () => {
       console.log(`Server running on port ${PORT}`);
-      console.log(`API: http://localhost:${PORT}/api/health`);
+      console.log("Koshila API is ready!");
     });
   } catch (error) {
     console.error("Server startup failed:", error.message);
@@ -48,6 +64,5 @@ const startServer = async () => {
 };
 
 startServer();
-
 
 
